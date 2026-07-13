@@ -1,5 +1,9 @@
-# Task 1 : Ask the user to enter the path of the folder they want to organize and store it in a variable.
+import os
 
-path = input("Enter the path of the folder you want to organize & store")
+path = input("Enter the path of the folder you want to organize & store : ")
 
+if os.path.isdir(path)== True:
+    print("Valid path")
 
+else:
+    print("Invalid path")
