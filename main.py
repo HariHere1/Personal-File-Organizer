@@ -17,7 +17,7 @@ for element in dir_elements:
     if os.path.isfile(full_path):
         print(element,' is a file \n')
     else:
-        print(elementsSo ,' is not a file')
+        print(element ,' is not a file')
 
 
 
