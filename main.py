@@ -40,8 +40,17 @@ for element in dir_elements:
 
         category = file_categories.get(extension.lower(),"Others")
 
-        print(f"{element} -> {category}")
-
+        if category == "Images" and ImgPath == NULL :
+            os.mkdir(category)
+        elif category == "Images" :
+            ImgPath = os.path.join(path, category)
+            print(ImgPath)
+        elif category == "Audio" :
+            AudioPath = os.path.join(path,category)
+            print(AudioPath)
+        elif category == "Documents" :
+            docPath = os.path.join(path,category)
+            print(docPath)
     else:
         print(element,"is a Folder")
 
