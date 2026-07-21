@@ -1,6 +1,5 @@
 import os
-from asyncio.windows_events import NULL
-from os import mkdir
+import shutil
 
 path = input("Enter the path of the folder you want to organize & store : ")
 
@@ -40,18 +39,18 @@ for element in dir_elements:
     if os.path.isfile(full_path) :
         filename,extension = (os.path.splitext(element))
 
-        category = file_categories.get(extension.lower(),"Others")
+        category = file_categories.get(extension.lower(), "Others")
 
         dest_path = os.path.join(path, category)
 
-        if category == "Images" and os.path.isdir(dest_path) == False :
-            os.mkdir(dest_path)
+        target_file_path = os.path.join(dest_path,element)
 
-        elif category == "Audio" and os.path.isdir(dest_path) == False:
+        if not os.path.isdir(dest_path):
             os.mkdir(dest_path)
-
-        elif category == "Documents" and os.path.isdir(dest_path) == False:
-            os.mkdir(dest_path)
+            shutil.move(full_path,target_file_path)
+        
+        else:
+            shutil.move(full_path,target_file_path)
     else:
         print(element,"is a Folder")
 
