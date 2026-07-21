@@ -4,7 +4,7 @@ from os import mkdir
 
 path = input("Enter the path of the folder you want to organize & store : ")
 
-ImgPath = None
+dest_path = None
 
 dir_elements = []
 
@@ -41,23 +41,17 @@ for element in dir_elements:
         filename,extension = (os.path.splitext(element))
 
         category = file_categories.get(extension.lower(),"Others")
-        if ImgPath is None:
-            ImgPath = os.path.join(path, category)
 
-        if category == "Images" and os.path.isdir(ImgPath) == False :
-            os.mkdir(ImgPath)
+        dest_path = os.path.join(path, category)
 
-        # elif category == "Images" :
-        #     ImgPath = os.path.join(path, category)
-        #     print(ImgPath)
-        #
-        # elif category == "Audio" :
-        #     AudioPath = os.path.join(path,category)
-        #     print(AudioPath)
-        #
-        # elif category == "Documents" :
-        #     docPath = os.path.join(path,category)
-        #     print(docPath)
+        if category == "Images" and os.path.isdir(dest_path) == False :
+            os.mkdir(dest_path)
+
+        elif category == "Audio" and os.path.isdir(dest_path) == False:
+            os.mkdir(dest_path)
+
+        elif category == "Documents" and os.path.isdir(dest_path) == False:
+            os.mkdir(dest_path)
     else:
         print(element,"is a Folder")
 
