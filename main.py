@@ -1,17 +1,18 @@
 import os
 import shutil
+import sys
+import time
 
-path = input("Enter the path of the folder you want to organize & store : ")
+print("=====================================\n\tPERSONAL FILE ORGANIZER\n=====================================")
+folder_path = input("\nEnter the path of the folder you want to organize & store : ")
 
-dest_path = None
-
-dir_elements = []
 
 file_categories = {
     ".png": "Images",
     ".jpg": "Images",
     ".jpeg": "Images",
     ".webp": "Images",
+    ".mov": "Videos",
 
     ".pdf": "Documents",
     ".doc": "Documents",
@@ -26,32 +27,41 @@ file_categories = {
     ".mkv": "Videos"
 }
 
-if os.path.isdir(path) :
-    print("\nValid path\n")
-    dir_elements = os.listdir(path)
+if os.path.isdir(folder_path):
+    print("\n\u2713Valid path\n")
+    dir_elements = os.listdir(folder_path)
 
+    time.sleep(2)
 else:
-    print("Invalid path")
+    print("\nInvalid path")
+    sys.exit()
 
 for element in dir_elements:
-    full_path = os.path.join(path, element)
+    source_file_path = os.path.join(folder_path, element)
 
-    if os.path.isfile(full_path) :
-        filename,extension = (os.path.splitext(element))
+    if os.path.isfile(source_file_path):
+        filename, extension = (os.path.splitext(element))
 
         category = file_categories.get(extension.lower(), "Others")
 
-        dest_path = os.path.join(path, category)
+        dest_path = os.path.join(folder_path, category)
 
-        target_file_path = os.path.join(dest_path,element)
+        target_file_path = os.path.join(dest_path, element)
 
         if not os.path.isdir(dest_path):
             os.mkdir(dest_path)
-            shutil.move(full_path,target_file_path)
-        
-        else:
-            shutil.move(full_path,target_file_path)
-    else:
-        print(element,"is a Folder")
+            shutil.move(source_file_path, target_file_path)
+            time.sleep(1)
+            print("\n")
+            print("Moving", element, "to", category)
 
-    
+        else:
+            shutil.move(source_file_path, target_file_path)
+            time.sleep(1)
+            print("\n")
+            print("Moving", element, "to", category)
+    else:
+        time.sleep(1)
+        print("\n")
+        print(element, "is a Folder")
+
