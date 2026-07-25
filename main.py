@@ -3,6 +3,12 @@ import shutil
 import sys
 import time
 
+
+def check_duplicate_file(target):
+    if os.path.exists(target):
+        print("File already exists")
+
+
 print("=====================================\n\tPERSONAL FILE ORGANIZER\n=====================================")
 folder_path = input("\nEnter the path of the folder you want to organize & store : ")
 
@@ -30,7 +36,6 @@ file_categories = {
 if os.path.isdir(folder_path):
     print("\n\u2713Valid path\n")
     dir_elements = os.listdir(folder_path)
-
     time.sleep(2)
 else:
     print("\nInvalid path")
@@ -48,20 +53,19 @@ for element in dir_elements:
 
         target_file_path = os.path.join(dest_path, element)
 
-        if not os.path.isdir(dest_path):
+        check_duplicate_file(target_file_path)
+
+
             os.mkdir(dest_path)
             shutil.move(source_file_path, target_file_path)
             time.sleep(1)
-            print("\n")
             print("Moving", element, "to", category)
 
         else:
             shutil.move(source_file_path, target_file_path)
             time.sleep(1)
-            print("\n")
             print("Moving", element, "to", category)
     else:
         time.sleep(1)
-        print("\n")
         print(element, "is a Folder")
 
