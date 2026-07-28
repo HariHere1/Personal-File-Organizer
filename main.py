@@ -4,10 +4,7 @@ import sys
 import time
 
 
-def check_duplicate_file(target):
-    if os.path.exists(target):
-        print("File already exists")
-
+count = 0
 
 print("=====================================\n\tPERSONAL FILE ORGANIZER\n=====================================")
 folder_path = input("\nEnter the path of the folder you want to organize & store : ")
@@ -53,9 +50,11 @@ for element in dir_elements:
 
         target_file_path = os.path.join(dest_path, element)
 
-        check_duplicate_file(target_file_path)
+        while os.path.exists(target_file_path):
+            count += 1
+            filename = "f{filename}.coun"
 
-
+        if not os.path.isdir(dest_path):
             os.mkdir(dest_path)
             shutil.move(source_file_path, target_file_path)
             time.sleep(1)
