@@ -56,19 +56,23 @@ for element in dir_elements:
         # Create category folder if missing
         if not os.path.exists(dest_path):
             os.mkdir(dest_path)
+        # Move file (Exception handling)
+        try:
 
-        # Move file
-        shutil.move(source_file_path, target_file_path)
-        category_counts[category] = category_counts.get(category,0) + 1
-        time.sleep(1)
+            shutil.move(source_file_path, target_file_path)
+            category_counts[category] = category_counts.get(category,0) + 1
+            time.sleep(1)
 
-        # Print movement message
-        final_filename = os.path.basename(target_file_path)
-        if final_filename != element:
-            print(f"Moving {element} (renamed to {final_filename}) to {category}")
-        else:
-            print(f"Moving {element} to {category}")
-
+            # Print movement message
+            final_filename = os.path.basename(target_file_path)
+            if final_filename != element:
+                print(f"Moving {element} (renamed to {final_filename}) to {category}")
+            else:
+                print(f"Moving {element} to {category}")
+        except PermissionError:
+            print(f"{filename}.{extension} is either locked or the file is currently open")
+        except Exception as e:
+            print(f"Error moving {element} : {e}")
     else:
         time.sleep(1)
         print(f"{element} is a Folder")
