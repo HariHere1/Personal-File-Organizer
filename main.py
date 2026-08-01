@@ -26,6 +26,8 @@ file_categories = {
     ".mov": "Videos"
 }
 
+category_counts = {}
+
 if os.path.isdir(folder_path):
     print("\n\u2713 Valid path\n")
     dir_elements = os.listdir(folder_path)
@@ -57,6 +59,7 @@ for element in dir_elements:
 
         # Move file
         shutil.move(source_file_path, target_file_path)
+        category_counts[category] = category_counts.get(category,0) + 1
         time.sleep(1)
 
         # Print movement message
@@ -69,3 +72,8 @@ for element in dir_elements:
     else:
         time.sleep(1)
         print(f"{element} is a Folder")
+
+print("\n--- Organization Summary ---")
+
+for category_name,file_count in category_counts.items():
+    print(f"\n{category_name}: {file_count}")
