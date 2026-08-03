@@ -32,7 +32,7 @@ def run_dry_run(folder_path, categories):
     Scans the folder and calculates all moves in virtual memory.
     Returns a list of dictionaries representing planned moves.
     """
-    print("--- 🔍 DRY RUN PREVIEW ---")
+    print("---  DRY RUN PREVIEW ---")
     time.sleep(0.5)
     planned_moves = []
     simulated_destinations = set()
@@ -126,7 +126,7 @@ def print_summary(category_counts):
 
 
 def parse_arguments():
-    
+
     parser = argparse.ArgumentParser(
         description="A safety-first Python file organizer with dry-run preview capabilities."
     )
