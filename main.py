@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 import sys
@@ -13,22 +14,25 @@ FILE_CATEGORIES = {
 
 
 def validate_path(folder_path):
-
+    """Validates if the provided path exists and is a directory."""
     time.sleep(0.3)
     if os.path.isdir(folder_path):
         time.sleep(0.5)
-        print("\nValid path\n")
+        print("\n✓ Valid path\n")
         time.sleep(0.5)
         return True
     else:
         time.sleep(0.3)
-        print("\nInvalid path")
+        print("\n Invalid path")
         return False
 
 
 def run_dry_run(folder_path, categories):
-
-    print("--- DRY RUN PREVIEW ---")
+    """
+    Scans the folder and calculates all moves in virtual memory.
+    Returns a list of dictionaries representing planned moves.
+    """
+    print("--- 🔍 DRY RUN PREVIEW ---")
     time.sleep(0.5)
     planned_moves = []
     simulated_destinations = set()
@@ -76,8 +80,8 @@ def run_dry_run(folder_path, categories):
 
 
 def execute_moves(planned_moves):
-
-    print("\n--- EXECUTING MOVES ---")
+    """Executes the file moves based on the planned moves blueprint."""
+    print("\n--- 🚀 EXECUTING MOVES ---")
     time.sleep(0.5)
     category_counts = {}
 
@@ -97,17 +101,17 @@ def execute_moves(planned_moves):
             time.sleep(0.3)  # Delay between individual moves
 
         except PermissionError:
-            print(f"{move['element']} is either locked or the file is currently open")
+            print(f"️ {move['element']} is either locked or open. Skipped.")
             time.sleep(0.3)
         except Exception as e:
-            print(f"Error moving {move['element']} : {e}")
+            print(f" Error moving {move['element']} : {e}")
             time.sleep(0.3)
 
     return category_counts
 
 
 def print_summary(category_counts):
-
+    """Prints the final summary report of organized files."""
     time.sleep(0.5)
     print("\n--- Organization Summary ---")
     time.sleep(0.3)
@@ -117,15 +121,45 @@ def print_summary(category_counts):
         return
 
     for category_name, file_count in category_counts.items():
-        print(f"\n{category_name}: {file_count}")
+        print(f"{category_name}: {file_count}")
         time.sleep(0.2)
+
+
+def parse_arguments():
+    
+    parser = argparse.ArgumentParser(
+        description="A safety-first Python file organizer with dry-run preview capabilities."
+    )
+    parser.add_argument(
+        "path",
+        nargs="?",
+        default=None,
+        help="Path to the directory you want to organize"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Perform a simulation run only without making any file changes"
+    )
+    parser.add_argument(
+        "-y", "--yes",
+        action="store_true",
+        help="Automatically apply changes without asking for confirmation"
+    )
+    return parser.parse_args()
 
 
 def main():
     """Main application controller."""
+    args = parse_arguments()
+
     print("=====================================\n\tPERSONAL FILE ORGANIZER\n=====================================")
     time.sleep(0.3)
-    folder_path = input("\nEnter the path of the folder you want to organize & store : ").strip()
+
+    # Use CLI path if provided, otherwise prompt the user interactively
+    folder_path = args.path
+    if not folder_path:
+        folder_path = input("\nEnter the path of the folder you want to organize & store : ").strip()
 
     # Step 1: Validate Path
     if not validate_path(folder_path):
@@ -139,10 +173,20 @@ def main():
         print("\nNo files to move. Exiting.")
         sys.exit()
 
-    # Step 3: Confirmation
     print(f"\nTotal files to move: {len(planned_moves)}")
     time.sleep(0.3)
-    confirm = input("Do you want to apply these changes? (y/n): ").strip().lower()
+
+    # Handle --dry-run flag
+    if args.dry_run:
+        print("\n--- Dry run flag active. No actual files were touched. ---")
+        sys.exit()
+
+    # Step 3: Confirmation Handling
+    if args.yes:
+        confirm = 'y'
+        print("Auto-applying changes (-y flag set)...")
+    else:
+        confirm = input("Do you want to apply these changes? (y/n): ").strip().lower()
 
     if confirm != 'y':
         time.sleep(0.3)
