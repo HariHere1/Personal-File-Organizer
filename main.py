@@ -1,203 +1,215 @@
 import argparse
+import json
 import os
 import shutil
 import sys
 import time
 
-# Global Configuration Constants
-FILE_CATEGORIES = {
-    ".png": "Images", ".jpg": "Images", ".jpeg": "Images", ".webp": "Images",
-    ".pdf": "Documents", ".doc": "Documents", ".docx": "Documents", ".txt": "Documents",
-    ".mp3": "Audio", ".m4a": "Audio", ".wav": "Audio",
-    ".mp4": "Videos", ".mkv": "Videos", ".mov": "Videos"
-}
+
+DEFAULT_CONFIG_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "categories.json"
+)
+
+
+def load_categories(config_path):
+    """Load a category-to-extension JSON file into an extension lookup table."""
+    try:
+        with open(config_path, "r", encoding="utf-8") as config_file:
+            config = json.load(config_file)
+    except FileNotFoundError:
+        print("Configuration file not found: {}".format(config_path))
+        return None
+    except (OSError, json.JSONDecodeError) as error:
+        print("Could not read configuration file: {}".format(error))
+        return None
+
+    if not isinstance(config, dict):
+        print("Invalid configuration: the root must be a JSON object.")
+        return None
+
+    categories = {}
+    for category, extensions in config.items():
+        if (not isinstance(category, str) or not category or
+                category in (".", "..") or os.path.basename(category) != category):
+            print("Invalid category name: {!r}".format(category))
+            return None
+        if not isinstance(extensions, list):
+            print("Extensions for '{}' must be a list.".format(category))
+            return None
+
+        for extension in extensions:
+            if not isinstance(extension, str) or not extension.strip():
+                print("Each extension must be a non-empty string.")
+                return None
+            normalized_extension = extension.strip().lower()
+            if not normalized_extension.startswith("."):
+                normalized_extension = "." + normalized_extension
+            categories[normalized_extension] = category
+
+    if not categories:
+        print("Invalid configuration: add at least one file extension.")
+        return None
+
+    return categories
 
 
 def validate_path(folder_path):
-    """Validates if the provided path exists and is a directory."""
-    time.sleep(0.3)
+    """Validate that the provided path exists and is a directory."""
     if os.path.isdir(folder_path):
-        time.sleep(0.5)
-        print("\n✓ Valid path\n")
-        time.sleep(0.5)
+        print("\nValid path.\n")
         return True
-    else:
-        time.sleep(0.3)
-        print("\n Invalid path")
-        return False
+
+    print("\nInvalid path.")
+    return False
 
 
 def run_dry_run(folder_path, categories):
-    """
-    Scans the folder and calculates all moves in virtual memory.
-    Returns a list of dictionaries representing planned moves.
-    """
-    print("---  DRY RUN PREVIEW ---")
-    time.sleep(0.5)
+    """Build and display an in-memory plan of collision-free file moves."""
+    print("--- DRY RUN PREVIEW ---")
     planned_moves = []
     simulated_destinations = set()
 
     for element in os.listdir(folder_path):
         source_file_path = os.path.join(folder_path, element)
 
-        # Skip folders and hidden system files
-        if not os.path.isfile(source_file_path) or element.startswith('.'):
+        # Ignore subfolders and hidden files such as .env or .DS_Store.
+        if not os.path.isfile(source_file_path) or element.startswith("."):
             continue
 
         filename, extension = os.path.splitext(element)
         category = categories.get(extension.lower(), "Others")
-        dest_path = os.path.join(folder_path, category)
-
-        # Duplicate collision math
-        target_file_path = os.path.join(dest_path, element)
+        dest_folder = os.path.join(folder_path, category)
+        target_file_path = os.path.join(dest_folder, element)
         count = 1
 
+        # Check both the disk and destinations already reserved in this plan.
         while os.path.exists(target_file_path) or target_file_path in simulated_destinations:
-            new_filename = f"{filename} ({count}){extension}"
-            target_file_path = os.path.join(dest_path, new_filename)
+            target_file_path = os.path.join(
+                dest_folder, "{} ({}){}".format(filename, count, extension)
+            )
             count += 1
 
         simulated_destinations.add(target_file_path)
         final_name = os.path.basename(target_file_path)
-
         planned_moves.append({
-            'src': source_file_path,
-            'dest_folder': dest_path,
-            'dest_file': target_file_path,
-            'element': element,
-            'category': category,
-            'final_name': final_name
+            "src": source_file_path,
+            "dest_folder": dest_folder,
+            "dest_file": target_file_path,
+            "element": element,
+            "category": category,
+            "final_name": final_name,
         })
 
         if final_name != element:
-            print(f"Would move: '{element}' --> '{category}/' (Renaming to '{final_name}')")
+            print("Would move: '{}' -> '{}/' (renamed to '{}')".format(
+                element, category, final_name
+            ))
         else:
-            print(f"Would move: '{element}' --> '{category}/'")
-
-        time.sleep(0.15)  # Slight pause between scanning items
+            print("Would move: '{}' -> '{}/'".format(element, category))
 
     return planned_moves
 
 
 def execute_moves(planned_moves):
-    """Executes the file moves based on the planned moves blueprint."""
-    print("\n--- 🚀 EXECUTING MOVES ---")
-    time.sleep(0.5)
+    """Create category folders and execute the approved move plan."""
+    print("\n--- EXECUTING MOVES ---")
     category_counts = {}
 
     for move in planned_moves:
-        if not os.path.exists(move['dest_folder']):
-            os.mkdir(move['dest_folder'])
+        if not os.path.exists(move["dest_folder"]):
+            os.mkdir(move["dest_folder"])
 
         try:
-            shutil.move(move['src'], move['dest_file'])
-            category_counts[move['category']] = category_counts.get(move['category'], 0) + 1
+            shutil.move(move["src"], move["dest_file"])
+            category = move["category"]
+            category_counts[category] = category_counts.get(category, 0) + 1
 
-            if move['final_name'] != move['element']:
-                print(f"Moving {move['element']} (renamed to {move['final_name']}) to {move['category']}")
+            if move["final_name"] != move["element"]:
+                print("Moving {} (renamed to {}) to {}".format(
+                    move["element"], move["final_name"], category
+                ))
             else:
-                print(f"Moving {move['element']} to {move['category']}")
-
-            time.sleep(0.3)  # Delay between individual moves
-
+                print("Moving {} to {}".format(move["element"], category))
         except PermissionError:
-            print(f"️ {move['element']} is either locked or open. Skipped.")
-            time.sleep(0.3)
-        except Exception as e:
-            print(f" Error moving {move['element']} : {e}")
-            time.sleep(0.3)
+            print("Warning: {} is locked or open. Skipped.".format(move["element"]))
+        except OSError as error:
+            print("Error moving {}: {}".format(move["element"], error))
 
     return category_counts
 
 
 def print_summary(category_counts):
-    """Prints the final summary report of organized files."""
-    time.sleep(0.5)
+    """Print the final category-by-category report."""
     print("\n--- Organization Summary ---")
-    time.sleep(0.3)
-
     if not category_counts:
         print("No files were moved.")
         return
 
     for category_name, file_count in category_counts.items():
-        print(f"{category_name}: {file_count}")
-        time.sleep(0.2)
+        print("{}: {}".format(category_name, file_count))
 
 
 def parse_arguments():
-
     parser = argparse.ArgumentParser(
-        description="A safety-first Python file organizer with dry-run preview capabilities."
+        description="A safety-first Python file organizer with dry-run previews."
     )
     parser.add_argument(
-        "path",
-        nargs="?",
-        default=None,
+        "path", nargs="?", default=None,
         help="Path to the directory you want to organize"
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Perform a simulation run only without making any file changes"
+        "--dry-run", action="store_true",
+        help="Preview planned moves without changing files"
     )
     parser.add_argument(
-        "-y", "--yes",
-        action="store_true",
-        help="Automatically apply changes without asking for confirmation"
+        "-y", "--yes", action="store_true",
+        help="Apply changes without asking for confirmation"
+    )
+    parser.add_argument(
+        "--config", default=DEFAULT_CONFIG_PATH,
+        help="Path to a JSON category file (default: categories.json)"
     )
     return parser.parse_args()
 
 
 def main():
-    """Main application controller."""
+    """Run the application controller."""
     args = parse_arguments()
+    print("=====================================\nPERSONAL FILE ORGANIZER\n=====================================")
 
-    print("=====================================\n\tPERSONAL FILE ORGANIZER\n=====================================")
-    time.sleep(0.3)
+    categories = load_categories(args.config)
+    if categories is None:
+        sys.exit(1)
 
-    # Use CLI path if provided, otherwise prompt the user interactively
     folder_path = args.path
     if not folder_path:
-        folder_path = input("\nEnter the path of the folder you want to organize & store : ").strip()
+        folder_path = input("\nEnter the folder path to organize: ").strip()
 
-    # Step 1: Validate Path
     if not validate_path(folder_path):
-        sys.exit()
+        sys.exit(1)
 
-    # Step 2: Dry Run
-    planned_moves = run_dry_run(folder_path, FILE_CATEGORIES)
-
-    time.sleep(0.5)
+    planned_moves = run_dry_run(folder_path, categories)
     if not planned_moves:
         print("\nNo files to move. Exiting.")
-        sys.exit()
+        return
 
-    print(f"\nTotal files to move: {len(planned_moves)}")
-    time.sleep(0.3)
-
-    # Handle --dry-run flag
+    print("\nTotal files to move: {}".format(len(planned_moves)))
     if args.dry_run:
-        print("\n--- Dry run flag active. No actual files were touched. ---")
-        sys.exit()
+        print("Dry-run mode active. No files were changed.")
+        return
 
-    # Step 3: Confirmation Handling
     if args.yes:
-        confirm = 'y'
         print("Auto-applying changes (-y flag set)...")
+        confirmed = True
     else:
-        confirm = input("Do you want to apply these changes? (y/n): ").strip().lower()
+        confirmed = input("Apply these changes? (y/n): ").strip().lower() == "y"
 
-    if confirm != 'y':
-        time.sleep(0.3)
-        print("Action cancelled. No files were touched.")
-        sys.exit()
+    if not confirmed:
+        print("Action cancelled. No files were changed.")
+        return
 
-    # Step 4: Execution & Summary
-    category_counts = execute_moves(planned_moves)
-    print_summary(category_counts)
+    print_summary(execute_moves(planned_moves))
 
 
-# Entry point
 if __name__ == "__main__":
     main()
